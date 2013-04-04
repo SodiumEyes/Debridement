@@ -10,7 +10,7 @@ namespace Debridement
 	class DebrisSalvageModule : PartModule
 	{
 
-		public const double MAX_SALVAGE_DIST = 1000;
+		public const double MAX_SALVAGE_DIST = 50;
 
 		public override void OnAwake()
 		{
@@ -21,7 +21,14 @@ namespace Debridement
 			}
 		}
 
-		[KSPEvent(guiName = "Salvage Debris", guiActiveUnfocused = true, externalToEVAOnly = true, guiActive = false, unfocusedRange = 4f)]
+		public override void OnUpdate()
+		{
+			base.OnUpdate();
+
+			Events["salvageDebris"].guiActiveUnfocused = vessel.LandedOrSplashed;
+		}
+
+		[KSPEvent(guiName = "Salvage Nearby Debris", guiActiveUnfocused = true, externalToEVAOnly = true, guiActive = false, unfocusedRange = 10f)]
 		public void salvageDebris()
 		{
 			Queue<Vessel> delete_queue = new Queue<Vessel>();
@@ -49,7 +56,8 @@ namespace Debridement
 						if (resource.amount > 0.0)
 						{
 							Debug.Log("Salvaged resource: " + resource.resourceName + " amount: " + resource.amount);
-							part.RequestResource(resource.resourceName, -resource.amount);
+							double received = part.RequestResource(resource.resourceName, -resource.amount);
+							resource.amount += received;
 						}
 					}
 				}
